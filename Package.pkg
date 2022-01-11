@@ -3,5 +3,8 @@
 <Package xmlns="http://br-automation.co.at/AS/Package">
   <Objects>
     <Object Type="File" Description="Default page">index.html</Object>
+    <Object Type="File">log.html</Object>
+    <Object Type="File">script.js</Object>
+    <Object Type="File">response.asp</Object>
   </Objects>
 </Package>
