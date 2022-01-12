@@ -6,5 +6,6 @@
     <Object Type="File">log.html</Object>
     <Object Type="File">script.js</Object>
     <Object Type="File">response.asp</Object>
+    <Object Type="File">style.css</Object>
   </Objects>
 </Package>

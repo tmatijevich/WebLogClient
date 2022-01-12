@@ -42,6 +42,7 @@ window.onload = () => {
   console.log("Window loaded and table content set");
 };
 
+// Create asynchronous function with promise to return read/write value or error
 function accessPV(tag, val) {
   return new Promise((resolve, reject) => {
     // Create an asynchronous request object
@@ -68,7 +69,7 @@ function accessPV(tag, val) {
         }
         else { 
           console.log("  " + (readPV ? "Read" : "Write") + " request unsuccessful");
-          reject("Unable to access PV");
+          reject("Unable to access PV " + tag);
         }
       }
     };
@@ -88,6 +89,7 @@ function pressRefresh() {
     return accessPV("WebLogger:refresh", 0); // Reset refresh command
   }).then(() => {
     console.log("Refresh complete");
+    refreshTable(); // Refresh table data with latest records
   }).catch(e => {
     accessPV("WebLogger:refresh", 0).then(() => { // Still reset the refresh command
       console.log("Refresh command reset");
@@ -119,4 +121,14 @@ async function checkDone() {
     }
   }
   console.log(`Check done timeout after ${timeElapsed} ms`);
+}
+
+function refreshTable() {
+  for(let i = 1; i <= numRecords; i++) {
+    accessPV(`WebLogger:display[${i-1}].timestamp`).then(pvValue => {
+      document.getElementById(`r${i}time`).innerHTML = pvValue.trim();
+    }).catch(e => {
+      document.getElementById(`r${i}time`).innerHTML = e;
+    });
+  }
 }
