@@ -1,5 +1,6 @@
 // Allow user to set the size of the table, the WebLog should match this constant
 const numRecords = 20;
+const taskName = "WebLogger";
 
 console.log("Run script file");
 
@@ -83,15 +84,15 @@ function accessPV(tag, val) {
 }
 
 function pressRefresh() {
-  accessPV("WebLogger:refresh", 1).then(() => { // Set refresh command
+  accessPV(taskName + ":refresh", 1).then(() => { // Set refresh command
     return checkDone(); // Check for done status true every XXX ms or until timeout
   }).then(() => {
-    return accessPV("WebLogger:refresh", 0); // Reset refresh command
+    return accessPV(taskName + ":refresh", 0); // Reset refresh command
   }).then(() => {
     console.log("Refresh complete");
     refreshTable(); // Refresh table data with latest records
   }).catch(e => {
-    accessPV("WebLogger:refresh", 0).then(() => { // Still reset the refresh command
+    accessPV(taskName + ":refresh", 0).then(() => { // Still reset the refresh command
       console.log("Refresh command reset");
     }).catch(e => {
       console.log("Unable to reset refresh command: " + e);
@@ -106,11 +107,11 @@ function delay(ms) {
 
 async function checkDone() {
   let timeElapsed = 0;
-  while(timeElapsed < 20000) {
-    await delay(2000);
-    timeElapsed += 2000;
+  while(timeElapsed < 3000) {
+    await delay(100);
+    timeElapsed += 100;
     try {
-      let pvValue = await accessPV("WebLogger:done");
+      let pvValue = await accessPV(taskName + ":done");
       if(pvValue.trim() == "1") {
         console.log("Refresh done");
         return; // End while loop
@@ -120,12 +121,12 @@ async function checkDone() {
       throw "Error reading done status";
     }
   }
-  console.log(`Check done timeout after ${timeElapsed} ms`);
+  throw `Check done timeout after ${timeElapsed} ms`;
 }
 
 function refreshTable() {
   for(let i = 1; i <= numRecords; i++) {
-    accessPV(`WebLogger:display[${i-1}].timestamp`).then(pvValue => {
+    accessPV(taskName + `:display[${i-1}].timestamp`).then(pvValue => {
       document.getElementById(`r${i}time`).innerHTML = pvValue.trim();
     }).catch(e => {
       document.getElementById(`r${i}time`).innerHTML = e;
