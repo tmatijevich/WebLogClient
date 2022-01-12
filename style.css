@@ -1,0 +1,12 @@
+table {
+  width: 100%;
+}
+
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+table tr:nth-child(odd) {
+  background-color: rgb(245,245,245);
+}
