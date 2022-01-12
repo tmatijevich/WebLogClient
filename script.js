@@ -1,7 +1,11 @@
-console.log("Run script file")
+// Allow user to set the size of the table, the WebLog should match this constant
+const numRecords = 20;
+
+console.log("Run script file");
 
 // Create a log table with fixed columns and variable rows
-window.onload = function() {
+window.onload = () => {
+  // Use template strings to handle placeholders and newlines: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
   let tableContent = `
   <table>
     <tr>
@@ -16,7 +20,7 @@ window.onload = function() {
     </tr>
   `;
 
-  for(let i = 1; i <= 20; i++) {
+  for(let i = 1; i <= numRecords; i++) {
     tableContent += `
       <tr>
         <td id="r${i}c1">${i}</td>
@@ -33,55 +37,86 @@ window.onload = function() {
   
   tableContent += "</table>";
 
+  // Reference hard-coded div element in body of page
   document.getElementById("weblog-content").innerHTML = tableContent;
-  console.log("Table content set");
+  console.log("Window loaded and table content set");
 };
 
-function accessPV(tag, val, callback) {
-  // Create an asynchronous request object
-  /* 
-    Browser compatibility: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#browser_compatibility
-    Chrome 1
-    Edge 12
-    Firefox 1
-    IE >7
-    Opera 8
-    Safari 1.2
-  */
-  const request = new XMLHttpRequest(); // New object from constructor`
-  request.open(method = "POST", url = "goform/ReadWrite", async = true); // See https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open
-  
-  //Program the event handler
-  request.onreadystatechange = function () {
-    if(request.readyState == XMLHttpRequest.DONE) {
-      if(request.status === 0 || 200 <= request.status && request.status < 400) {
-        console.log(tag + (typeof val === "undefined" ? " --> " : " <-- ") + request.responseText);
-        try {callback(request.responseText);} catch {console.log("No callback function")};
+function accessPV(tag, val) {
+  return new Promise((resolve, reject) => {
+    // Create an asynchronous request object
+    /* 
+      Browser compatibility: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#browser_compatibility
+      Chrome 1
+      Edge 12
+      Firefox 1
+      IE >7
+      Opera 8
+      Safari 1.2
+    */
+    const request = new XMLHttpRequest(); // New object from constructor
+    request.open(method = "POST", url = "goform/ReadWrite", async = true); // See https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open
+    
+    let readPV = (typeof val === "undefined" ? true : false);
+
+    // Program the event handler
+    request.onreadystatechange = () => {
+      if(request.readyState == XMLHttpRequest.DONE) {
+        if(request.status === 0 || 200 <= request.status && request.status < 400) {
+          console.log("  " + tag + (readPV ? " --> " : " <-- ") + request.responseText);
+          resolve(request.responseText);
+        }
+        else { 
+          console.log("  " + (readPV ? "Read" : "Write") + " request unsuccessful");
+          reject("Unable to access PV");
+        }
       }
-      else { 
-        console.log((typeof val === "undefined" ? "Read" : "Write") + " request unsuccessful");
+    };
+
+    // Send request data
+    let data = "redirect=response.asp&variable=" + escape(tag); // Redirect to WebPrint call, escape tag characters for url
+    data += "&value=" + (readPV ? "none&read=1" : val.toString() + "&write=1"); // No value for read and value for write
+    console.log("  " + data);
+    request.send(data);
+  });
+}
+
+function pressRefresh() {
+  accessPV("WebLogger:refresh", 1).then(() => { // Set refresh command
+    return checkDone(); // Check for done status true every XXX ms or until timeout
+  }).then(() => {
+    return accessPV("WebLogger:refresh", 0); // Reset refresh command
+  }).then(() => {
+    console.log("Refresh complete");
+  }).catch(e => {
+    accessPV("WebLogger:refresh", 0).then(() => { // Still reset the refresh command
+      console.log("Refresh command reset");
+    }).catch(e => {
+      console.log("Unable to reset refresh command: " + e);
+    }); 
+    console.log("Refresh incomplete: " + e);
+  });
+}
+
+function delay(ms) {
+  return new Promise(resolve => {setTimeout(resolve, ms);});
+}
+
+async function checkDone() {
+  let timeElapsed = 0;
+  while(timeElapsed < 20000) {
+    await delay(2000);
+    timeElapsed += 2000;
+    try {
+      let pvValue = await accessPV("WebLogger:done");
+      if(pvValue.trim() == "1") {
+        console.log("Refresh done");
+        return; // End while loop
       }
     }
+    catch {
+      throw "Error reading done status";
+    }
   }
-
-  // Send request data
-  let data = "redirect=response.asp&variable=" + escape(tag) + "&value=" + (typeof val === "undefined" ? "none&read=1" : val.toString() + "&write=1");
-  console.log(data);
-  request.send(data);
+  console.log(`Check done timeout after ${timeElapsed} ms`);
 }
-
-function refreshLog() {
-  for(let i = 1; i <= 20; i++) {
-    accessPV(`WebLogger:display[${i-1}].timestamp`, undefined, (val) => {document.getElementById(`r${i}time`).innerHTML = val;});
-  }
-}
-
-const refreshButton = function() {
-  accessPV("WebLogger:refresh", 1);
-  setTimeout(() => {
-    refreshLog();
-  }, 10000);
-};
-
-console.log("Test readPV()");
-accessPV("WebLogger:refresh");
