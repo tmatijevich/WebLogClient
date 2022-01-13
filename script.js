@@ -84,6 +84,12 @@ function accessPV(tag, val) {
 }
 
 function pressRefresh() {
+  // Clear data
+  for(let i = 1; i <= numRecords; i++) {
+    document.getElementById(`r${i}severity`).innerHTML = "";
+    document.getElementById(`r${i}time`).innerHTML = "";
+  }
+  
   accessPV(taskName + ":refresh", 1).then(() => { // Set refresh command
     return checkDone(); // Check for done status true every XXX ms or until timeout
   }).then(() => {
@@ -107,9 +113,9 @@ function delay(ms) {
 
 async function checkDone() {
   let timeElapsed = 0;
-  while(timeElapsed < 3000) {
-    await delay(100);
-    timeElapsed += 100;
+  while(timeElapsed < 2500) {
+    await delay(25);
+    timeElapsed += 25;
     try {
       let pvValue = await accessPV(taskName + ":done");
       if(pvValue.trim() == "1") {
@@ -126,6 +132,32 @@ async function checkDone() {
 
 function refreshTable() {
   for(let i = 1; i <= numRecords; i++) {
+    // severity
+    accessPV(taskName + `:display[${i-1}].severity`).then(pvValue => {
+      let severityText = "";
+      switch(parseInt(pvValue.trim())) {
+        case 0: 
+          severityText = "Success";
+          break;
+        case 1: 
+          severityText = "Information";
+          break;
+        case 2: 
+          severityText = "Warning";
+          break;
+        case 3: 
+          severityText = "Error";
+          break;
+        default: 
+          severityText = "Unknown";
+          break;
+      }
+      document.getElementById(`r${i}severity`).innerHTML = severityText;
+    }).catch(e => {
+      document.getElementById(`r${i}severity`).innerHTML = e;
+    });
+    
+    // time
     accessPV(taskName + `:display[${i-1}].timestamp`).then(pvValue => {
       document.getElementById(`r${i}time`).innerHTML = pvValue.trim();
     }).catch(e => {
