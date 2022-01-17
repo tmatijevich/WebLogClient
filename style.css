@@ -32,6 +32,11 @@ th:nth-child(3), td:nth-child(3) {
   width: 200px;
 }
 
+/* logbook */
+th:nth-child(5), td:nth-child(5) { 
+  width: 150px;
+}
+
 td {
   overflow: hidden; /* Hide overflow-x */
   text-overflow: ellipsis; /* Add ellipsis when overflow-x */

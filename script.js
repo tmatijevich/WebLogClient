@@ -1,6 +1,6 @@
 // Allow user to set the size of the table, the WebLog should match this constant
 const numRecords = 20;
-const taskName = "WebLogger";
+const taskName = "WebLog";
 
 console.log("Run script file");
 
@@ -88,6 +88,7 @@ function pressRefresh() {
   for(let i = 1; i <= numRecords; i++) {
     document.getElementById(`r${i}severity`).innerHTML = "";
     document.getElementById(`r${i}time`).innerHTML = "";
+    document.getElementById(`r${i}logbook`).innerHTML = "";
   }
   
   accessPV(taskName + ":refresh", 1).then(() => { // Set refresh command
@@ -122,6 +123,9 @@ async function checkDone() {
         console.log("Refresh done");
         return; // End while loop
       }
+      else if(pvValue.trim() == "Unknown variable") {
+        throw pvValue.trim();
+      }
     }
     catch {
       throw "Error reading done status";
@@ -149,7 +153,7 @@ function refreshTable() {
           severityText = "Error";
           break;
         default: 
-          severityText = "Unknown";
+          severityText = "";
           break;
       }
       document.getElementById(`r${i}severity`).innerHTML = severityText;
@@ -162,6 +166,13 @@ function refreshTable() {
       document.getElementById(`r${i}time`).innerHTML = pvValue.trim();
     }).catch(e => {
       document.getElementById(`r${i}time`).innerHTML = e;
+    });
+
+    // logbook
+    accessPV(taskName + `:display[${i-1}].logbook`).then(pvValue => {
+      document.getElementById(`r${i}logbook`).innerHTML = pvValue.trim();
+    }).catch(e => {
+      document.getElementById(`r${i}logbook`).innerHTML = e;
     });
   }
 }
