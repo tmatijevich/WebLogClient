@@ -57,7 +57,7 @@ function accessPV(tag, val) {
       Safari 1.2
     */
     const request = new XMLHttpRequest(); // New object from constructor
-    request.open(method = "POST", url = "goform/ReadWrite", async = true); // See https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open
+    request.open(method = "POST", url = "../goform/ReadWrite", async = true); // See https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open
     
     let readPV = (typeof val === "undefined" ? true : false);
 
@@ -76,7 +76,7 @@ function accessPV(tag, val) {
     };
 
     // Send request data
-    let data = "redirect=response.asp&variable=" + escape(tag); // Redirect to WebPrint call, escape tag characters for url
+    let data = "redirect=log/response.asp&variable=" + escape(tag); // Redirect to WebPrint call, escape tag characters for url
     data += "&value=" + (readPV ? "none&read=1" : val.toString() + "&write=1"); // No value for read and value for write
     console.log("  " + data);
     request.send(data);
@@ -88,7 +88,11 @@ function pressRefresh() {
   for(let i = 1; i <= numRecords; i++) {
     document.getElementById(`r${i}severity`).innerHTML = "";
     document.getElementById(`r${i}time`).innerHTML = "";
+    document.getElementById(`r${i}id`).innerHTML = "";
     document.getElementById(`r${i}logbook`).innerHTML = "";
+    document.getElementById(`r${i}object`).innerHTML = "";
+    document.getElementById(`r${i}description`).innerHTML = "";
+    document.getElementById(`r${i}ascii`).innerHTML = "";
   }
   
   accessPV(taskName + ":refresh", 1).then(() => { // Set refresh command
@@ -134,45 +138,57 @@ async function checkDone() {
   throw `Check done timeout after ${timeElapsed} ms`;
 }
 
-function refreshTable() {
+async function refreshTable() {
+  const response = await fetch("table.asp");
+  const tableData = await response.json();
+  console.log(tableData);
+
   for(let i = 1; i <= numRecords; i++) {
     // severity
-    accessPV(taskName + `:display[${i-1}].severity`).then(pvValue => {
-      let severityText = "";
-      switch(parseInt(pvValue.trim())) {
-        case 0: 
-          severityText = "Success";
-          break;
-        case 1: 
-          severityText = "Information";
-          break;
-        case 2: 
-          severityText = "Warning";
-          break;
-        case 3: 
-          severityText = "Error";
-          break;
-        default: 
-          severityText = "";
-          break;
-      }
-      document.getElementById(`r${i}severity`).innerHTML = severityText;
-    }).catch(e => {
-      document.getElementById(`r${i}severity`).innerHTML = e;
-    });
+    let severityText = "";
+    switch(parseInt(tableData[i-1].severity.trim())) {
+      case 0: 
+        severityText = "Success";
+        break;
+      case 1: 
+        severityText = "Information";
+        break;
+      case 2: 
+        severityText = "Warning";
+        break;
+      case 3: 
+        severityText = "Error";
+        break;
+      default:
+        continue;
+    }
+    document.getElementById(`r${i}severity`).innerHTML = severityText;
+    
+    // event or error number
+    if(tableData[i-1].event.trim() == "0") {
+      document.getElementById(`r${i}id`).innerHTML = tableData[i-1].errorNumber.trim();
+    }
+    else {
+      document.getElementById(`r${i}id`).innerHTML = tableData[i-1].event.trim();
+    }
     
     // time
-    accessPV(taskName + `:display[${i-1}].timestamp`).then(pvValue => {
-      document.getElementById(`r${i}time`).innerHTML = pvValue.trim();
-    }).catch(e => {
-      document.getElementById(`r${i}time`).innerHTML = e;
-    });
+    let timeVal = new Date(tableData[i-1].sec * 1000);
+    let timestamp = String(timeVal.getFullYear()).padStart(4, "0");
+    timestamp += "-" + String(timeVal.getMonth() + 1).padStart(2, "0");
+    timestamp += "-" + String(timeVal.getDate()).padStart(2, "0");
+    timestamp += " / ";
+    timestamp += String(timeVal.getHours()).padStart(2, "0");
+    timestamp += ":" + String(timeVal.getMinutes()).padStart(2, "0");
+    timestamp += ":" + String(timeVal.getSeconds()).padStart(2, "0");
+    timestamp += "." + ((tableData[i-1].nsec % 1000000000) / 1000000).toFixed().padStart(3, "0");
+    timestamp += ((tableData[i-1].nsec % 1000000) / 1000).toFixed().padStart(3, "0");
+    document.getElementById(`r${i}time`).innerHTML = timestamp;
 
-    // logbook
-    accessPV(taskName + `:display[${i-1}].logbook`).then(pvValue => {
-      document.getElementById(`r${i}logbook`).innerHTML = pvValue.trim();
-    }).catch(e => {
-      document.getElementById(`r${i}logbook`).innerHTML = e;
-    });
+    // logbook, object, description, ascii
+    document.getElementById(`r${i}logbook`).innerHTML = tableData[i-1].logbook.trim();
+    document.getElementById(`r${i}object`).innerHTML = tableData[i-1].object.trim();
+    document.getElementById(`r${i}description`).innerHTML = tableData[i-1].description.trim();
+    document.getElementById(`r${i}ascii`).innerHTML = tableData[i-1].asciiData.trim();
   }
 }

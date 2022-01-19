@@ -3,9 +3,9 @@
 <Package xmlns="http://br-automation.co.at/AS/Package">
   <Objects>
     <Object Type="File" Description="Default page">index.html</Object>
-    <Object Type="File">log.html</Object>
-    <Object Type="File">script.js</Object>
-    <Object Type="File">response.asp</Object>
-    <Object Type="File">style.css</Object>
+    <Object Type="File" Description="Dynamic content">script.js</Object>
+    <Object Type="File" Description="Format">style.css</Object>
+    <Object Type="File" Description="Web print">response.asp</Object>
+    <Object Type="File" Description="Table read">table.asp</Object>
   </Objects>
 </Package>

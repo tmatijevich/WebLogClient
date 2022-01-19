@@ -32,9 +32,29 @@ th:nth-child(3), td:nth-child(3) {
   width: 200px;
 }
 
+/* id */
+th:nth-child(4), td:nth-child(4) { 
+  width: 150px;
+}
+
 /* logbook */
 th:nth-child(5), td:nth-child(5) { 
   width: 150px;
+}
+
+/* object */
+th:nth-child(6), td:nth-child(6) { 
+  width: 150px;
+}
+
+/* description */
+th:nth-child(7), td:nth-child(7) { 
+  width: 500px;
+}
+
+/* ascii */
+th:nth-child(8), td:nth-child(8) { 
+  width: 500px;
 }
 
 td {
@@ -44,7 +64,8 @@ td {
 }
 
 td:hover {
-  background-color: rgb(245,245,245);
+  /* background-color: rgb(255, 136, 0); */
   overflow: visible;
   white-space: normal;
+  word-break: break-all;
 }
