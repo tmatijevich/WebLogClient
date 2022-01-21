@@ -83,7 +83,7 @@ function accessPV(tag, val) {
   });
 }
 
-function pressRefresh() {
+function userCommand(cmd) {
   // Clear data
   for(let i = 1; i <= numRecords; i++) {
     document.getElementById(`r${i}severity`).innerHTML = "";
@@ -95,20 +95,20 @@ function pressRefresh() {
     document.getElementById(`r${i}ascii`).innerHTML = "";
   }
   
-  accessPV(taskName + ":refresh", 1).then(() => { // Set refresh command
+  accessPV(taskName + ":" + cmd, 1).then(() => { // Set refresh command
     return checkDone(); // Check for done status true every XXX ms or until timeout
   }).then(() => {
-    return accessPV(taskName + ":refresh", 0); // Reset refresh command
+    return accessPV(taskName + ":" + cmd, 0); // Reset refresh command
   }).then(() => {
-    console.log("Refresh complete");
+    console.log("User command complete");
     refreshTable(); // Refresh table data with latest records
   }).catch(e => {
-    accessPV(taskName + ":refresh", 0).then(() => { // Still reset the refresh command
-      console.log("Refresh command reset");
+    accessPV(taskName + ":" + cmd, 0).then(() => { // Still reset the refresh command
+      console.log("User command reset");
     }).catch(e => {
-      console.log("Unable to reset refresh command: " + e);
+      console.log("Unable to reset user command: " + e);
     }); 
-    console.log("Refresh incomplete: " + e);
+    console.log("User command incomplete: " + e);
   });
 }
 
@@ -124,7 +124,7 @@ async function checkDone() {
     try {
       let pvValue = await accessPV(taskName + ":done");
       if(pvValue.trim() == "1") {
-        console.log("Refresh done");
+        console.log("Display update done");
         return; // End while loop
       }
       else if(pvValue.trim() == "Unknown variable") {
