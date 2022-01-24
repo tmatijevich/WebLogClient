@@ -27,7 +27,7 @@ window.onload = () => {
         <td id="r${i}c1">${i}</td>
         <td id="r${i}severity"></td>
         <td id="r${i}time"></td>
-        <td id="r${i}id"></td>
+        <td class="tooltip" id="r${i}id"></td>
         <td id="r${i}logbook"></td>
         <td id="r${i}object"></td>
         <td id="r${i}description"></td>
@@ -169,7 +169,12 @@ async function refreshTable() {
       document.getElementById(`r${i}id`).innerHTML = tableData[i-1].errorNumber.trim();
     }
     else {
-      document.getElementById(`r${i}id`).innerHTML = tableData[i-1].event.trim();
+      let eventText = tableData[i-1].event.trim();
+      let facility = (parseInt(tableData[i-1].event.trim()) >>> 16) & 0xFFF;
+      eventText += `<span class="tooltiptext">Facility = ${facility}<br>`;
+      let code = parseInt(tableData[i-1].event.trim()) & 0xFFFF;
+      eventText += `Code = ${code}</span>`;
+      document.getElementById(`r${i}id`).innerHTML = eventText;
     }
     
     // time
