@@ -24,7 +24,7 @@ window.onload = () => {
   for(let i = 1; i <= numRecords; i++) {
     tableContent += `
       <tr>
-        <td id="r${i}c1">${i}</td>
+        <td id="r${i}index">&nbsp;</td>
         <td id="r${i}severity"></td>
         <td id="r${i}time"></td>
         <td class="tooltip" id="r${i}id"></td>
@@ -86,6 +86,7 @@ function accessPV(tag, val) {
 function userCommand(cmd) {
   // Clear data
   for(let i = 1; i <= numRecords; i++) {
+    document.getElementById(`r${i}index`).innerHTML = "&nbsp;";
     document.getElementById(`r${i}severity`).innerHTML = "";
     document.getElementById(`r${i}time`).innerHTML = "";
     document.getElementById(`r${i}id`).innerHTML = "";
@@ -141,12 +142,13 @@ async function checkDone() {
 async function refreshTable() {
   const response = await fetch("table.asp");
   const tableData = await response.json();
-  console.log(tableData);
+
+  let tableOffset = parseInt(tableData[0].tableOffset.trim());
 
   for(let i = 1; i <= numRecords; i++) {
     // severity
     let severityText = "";
-    switch(parseInt(tableData[i-1].severity.trim())) {
+    switch(parseInt(tableData[i].severity.trim())) {
       case 0: 
         severityText = "Success";
         break;
@@ -163,22 +165,25 @@ async function refreshTable() {
         continue;
     }
     document.getElementById(`r${i}severity`).innerHTML = severityText;
+
+    // index
+    document.getElementById(`r${i}index`).innerHTML = tableOffset + i;
     
     // event or error number
-    if(tableData[i-1].event.trim() == "0") {
-      document.getElementById(`r${i}id`).innerHTML = tableData[i-1].errorNumber.trim();
+    if(tableData[i].event.trim() == "0") {
+      document.getElementById(`r${i}id`).innerHTML = tableData[i].errorNumber.trim();
     }
     else {
-      let eventText = tableData[i-1].event.trim();
-      let facility = (parseInt(tableData[i-1].event.trim()) >>> 16) & 0xFFF;
+      let eventText = tableData[i].event.trim();
+      let facility = (parseInt(tableData[i].event.trim()) >>> 16) & 0xFFF;
       eventText += `<span class="tooltiptext">Facility = ${facility}<br>`;
-      let code = parseInt(tableData[i-1].event.trim()) & 0xFFFF;
+      let code = parseInt(tableData[i].event.trim()) & 0xFFFF;
       eventText += `Code = ${code}</span>`;
       document.getElementById(`r${i}id`).innerHTML = eventText;
     }
     
     // time
-    let timeVal = new Date(tableData[i-1].sec * 1000);
+    let timeVal = new Date(tableData[i].sec * 1000);
     let timestamp = String(timeVal.getFullYear()).padStart(4, "0");
     timestamp += "-" + String(timeVal.getMonth() + 1).padStart(2, "0");
     timestamp += "-" + String(timeVal.getDate()).padStart(2, "0");
@@ -186,14 +191,14 @@ async function refreshTable() {
     timestamp += String(timeVal.getHours()).padStart(2, "0");
     timestamp += ":" + String(timeVal.getMinutes()).padStart(2, "0");
     timestamp += ":" + String(timeVal.getSeconds()).padStart(2, "0");
-    timestamp += "." + ((tableData[i-1].nsec % 1000000000) / 1000000).toFixed().padStart(3, "0");
-    timestamp += ((tableData[i-1].nsec % 1000000) / 1000).toFixed().padStart(3, "0");
+    timestamp += "." + ((tableData[i].nsec % 1000000000) / 1000000).toFixed().padStart(3, "0");
+    timestamp += ((tableData[i].nsec % 1000000) / 1000).toFixed().padStart(3, "0");
     document.getElementById(`r${i}time`).innerHTML = timestamp;
 
     // logbook, object, description, ascii
-    document.getElementById(`r${i}logbook`).innerHTML = tableData[i-1].logbook.trim();
-    document.getElementById(`r${i}object`).innerHTML = tableData[i-1].object.trim();
-    document.getElementById(`r${i}description`).innerHTML = tableData[i-1].description.trim();
-    document.getElementById(`r${i}ascii`).innerHTML = tableData[i-1].asciiData.trim();
+    document.getElementById(`r${i}logbook`).innerHTML = tableData[i].logbook.trim();
+    document.getElementById(`r${i}object`).innerHTML = tableData[i].object.trim();
+    document.getElementById(`r${i}description`).innerHTML = tableData[i].description.trim();
+    document.getElementById(`r${i}ascii`).innerHTML = tableData[i].asciiData.trim();
   }
 }
