@@ -7,5 +7,7 @@
     <Object Type="File" Description="Format">style.css</Object>
     <Object Type="File" Description="Web print">response.asp</Object>
     <Object Type="File" Description="Table read">table.asp</Object>
+    <Object Type="File" Description="Initialization script">initialize.ps1</Object>
+    <Object Type="File" Description="Git ignore file">.gitignore</Object>
   </Objects>
 </Package>
