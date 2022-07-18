@@ -1,6 +1,16 @@
 // Allow user to set the size of the table, the WebLog should match this constant
 const numRecords = 20;
 const taskName = "WebLog";
+const logbooks = ["System", // The order must match the initialization routine in WebLog
+  "Fieldbus",
+  "Connectivity",
+  "Text System",
+  "Access & Security",
+  "Visualization",
+  "Firewall",
+  "Version Info",
+  "Diagnostics",
+  "User"];
 
 console.log("Run script file");
 
@@ -41,6 +51,24 @@ window.onload = () => {
   // Reference hard-coded div element in body of page
   document.getElementById("weblog-content").innerHTML = tableContent;
   console.log("Window loaded and table content set");
+
+  filterContent = "";
+  for(let i = 0; i < logbooks.length; i++) {
+    filterContent += `<label for="${filterName(logbooks[i])}"> <input type="checkbox" id="${filterName(logbooks[i])}"> ${logbooks[i]} </label>`
+    filterContent += "<br>";
+  }
+
+  document.getElementById("weblog-filter").innerHTML = filterContent;
+
+  for(let i = 0; i < logbooks.length; i++) {
+    checkbox = document.getElementById(filterName(logbooks[i]));
+    checkbox.checked = true;
+    checkbox.addEventListener("click", (event) => {
+      console.log(event.target.checked);
+      accessPV(`${taskName}:book[${i}].search.filter`, event.target.checked ? 0 : 1);
+    });
+  }
+
 };
 
 // Create asynchronous function with promise to return read/write value or error
@@ -201,4 +229,8 @@ async function refreshTable() {
     document.getElementById(`r${i}description`).innerHTML = tableData[i].description.trim();
     document.getElementById(`r${i}ascii`).innerHTML = tableData[i].asciiData.trim();
   }
+}
+
+function filterName(logbook) {
+  return "filter-" + logbook.split(" ")[0].toLowerCase();
 }
